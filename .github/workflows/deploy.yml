@@ -1,0 +1,31 @@
+name: Deploy to Amazon ECS
+
+on:
+  push:
+    branches:
+      - main  # Пайплайн буде запускатися кожного разу, коли ти робиш зміни в гілці main
+
+env:
+  AWS_REGION: us-east-1                   # Твій регіон AWS
+  ECS_SERVICE: wordpress-service          # Назва твого ECS сервісу
+  ECS_CLUSTER: wordpress-cluster          # Назва твого ECS кластера
+
+jobs:
+  deploy:
+    name: Deploy to AWS Fargate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Force new deployment in Amazon ECS
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE }} --force-new-deployment
